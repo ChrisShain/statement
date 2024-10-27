@@ -37,7 +37,7 @@
 //! - [FromState::From]: The specific provided started state. FromState implements [From] for this
 //! variant, so the variant can be elided for the common case.
 //!
-//! Triggers may also optionally provide a predicate to apply custom logic to decide whether the
+//! Transitions may also optionally provide a predicate to apply custom logic to decide whether the
 //! Transition is applied. Transitions may also be triggered from any ([FromState::Any]) state,
 //! meaning that they are considered for any Event.
 //!
