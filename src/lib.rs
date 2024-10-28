@@ -96,7 +96,7 @@ pub struct StateMachine<'a, TEvent, TState: PartialEq<TState> + Clone + Send + '
     pub cycle: bool,
 }
 
-impl <'a, TEvent, TState: PartialEq<TState> + Debug + Clone + Send + Eq + PartialEq + 'a, TData> StateMachine<'a, TEvent, TState, TData> {
+impl <'a, TEvent, TState: PartialEq<TState> + Clone + Send + Eq + PartialEq + 'a, TData> StateMachine<'a, TEvent, TState, TData> {
     fn new(cycle: bool, initial_state: TState, initial_data: TData) -> Self {
         Self {
             cycle,
@@ -193,7 +193,7 @@ pub struct LockedStateMachineFactory<'a, TEvent, TState: PartialEq<TState> + Clo
     cycle: bool,
 }
 
-impl <'a, TEvent, TState: PartialEq<TState> + Debug + Clone + Send + Eq + PartialEq + 'a, TData> LockedStateMachineFactory<'a, TEvent, TState, TData> {
+impl <'a, TEvent, TState: PartialEq<TState> + Clone + Send + Eq + PartialEq + 'a, TData> LockedStateMachineFactory<'a, TEvent, TState, TData> {
     /// Builds a StateMachine with a specified initial state and initial data.
     pub fn build(&self, initial_state: TState, initial_data: TData) -> StateMachine<'a, TEvent, TState, TData> {
         StateMachine::new(self.cycle, initial_state, initial_data).with_transitions(self.transitions.clone())
@@ -209,7 +209,7 @@ pub struct StateMachineFactory<'a, TEvent, TState: PartialEq<TState> + Clone + S
     transitions: Vec<StateMachineTransition<'a, TEvent, TState, TData>>,
 }
 
-impl <'a, TEvent, TState: PartialEq<TState> + Debug + Clone + Send + Eq + PartialEq + 'a, TData> StateMachineFactory<'a, TEvent, TState, TData> {
+impl <'a, TEvent, TState: PartialEq<TState> + Clone + Send + Eq + PartialEq + 'a, TData> StateMachineFactory<'a, TEvent, TState, TData> {
     /// Creates a new `StateMachineFactory`
     pub fn new() -> Self {
         Self {
@@ -256,7 +256,7 @@ impl <'a, TEvent, TState: PartialEq<TState> + Debug + Clone + Send + Eq + Partia
     /// If this State Machine has cycle enabled, this transition will execute automatically,
     /// essentially skipping the From state after executing the side effect. If Cycle is not
     /// enabled, the State Machine will transition to the To state with any future event.
-    pub fn with_named_transition_effect(mut self, name: impl Into<String>, from_state: impl Into<FromState<TState>>, get_to_state: impl Into<ToState<TEvent, TState, TData>>, effect: impl Fn(StateTransitionEffectData<TEvent, TState, TData>) -> Result<(), Box<dyn std::error::Error + Send>> + Send + 'a) -> Self
+    pub fn with_named_transition_effect(mut self, name: impl Into<String>, from_state: impl Into<FromState<TState>>, get_to_state: impl Into<ToState<TEvent, TState, TData>>, effect: impl Fn(StateTransitionEffectData<TEvent, TState, TData>) -> Result<(), Box<dyn std::error::Error>> + Send + 'a) -> Self
     {
         self.transitions.push(StateMachineTransition::new(Some(name.into()), None, from_state.into(), get_to_state.into(), Some(Box::new(effect))));
         self
@@ -274,7 +274,7 @@ impl <'a, TEvent, TState: PartialEq<TState> + Debug + Clone + Send + Eq + Partia
     /// Adds a named Transition to the State Machine definition with a predicate and a Side Effect.
     /// This transition will test the predicate for any event and execute the Side Effect then move
     /// to the To state if the Predicate returns true.
-    pub fn with_named_predicated_transition_effect(mut self, name: impl Into<String>, from_state: impl Into<FromState<TState>>, get_to_state: impl Into<ToState<TEvent, TState, TData>>, event_predicate: impl Fn(&StateTransitionEffectData<TEvent, TState, TData>) -> bool + Send + 'a, effect: impl Fn(StateTransitionEffectData<TEvent, TState, TData>) -> Result<(), Box<dyn std::error::Error + Send>> + Send + 'a) -> Self
+    pub fn with_named_predicated_transition_effect(mut self, name: impl Into<String>, from_state: impl Into<FromState<TState>>, get_to_state: impl Into<ToState<TEvent, TState, TData>>, event_predicate: impl Fn(&StateTransitionEffectData<TEvent, TState, TData>) -> bool + Send + 'a, effect: impl Fn(StateTransitionEffectData<TEvent, TState, TData>) -> Result<(), Box<dyn std::error::Error>> + Send + 'a) -> Self
     {
         self.transitions.push(StateMachineTransition::new(Some(name.into()), Some(Box::new(event_predicate)), from_state.into(), get_to_state.into(), Some(Box::new(effect))));
         self
@@ -295,7 +295,7 @@ impl <'a, TEvent, TState: PartialEq<TState> + Debug + Clone + Send + Eq + Partia
     /// automatically, essentially skipping the From state after executing the side effect. If
     /// Cycle is not enabled, the State Machine will transition to the To state with any future
     /// event.
-    pub fn with_transition_effect(mut self, from_state: impl Into<FromState<TState>>, get_to_state: impl Into<ToState<TEvent, TState, TData>>, effect: impl Fn(StateTransitionEffectData<TEvent, TState, TData>) -> Result<(), Box<dyn std::error::Error + Send>> + Send + 'a) -> Self
+    pub fn with_transition_effect(mut self, from_state: impl Into<FromState<TState>>, get_to_state: impl Into<ToState<TEvent, TState, TData>>, effect: impl Fn(StateTransitionEffectData<TEvent, TState, TData>) -> Result<(), Box<dyn std::error::Error>> + Send + 'a) -> Self
     {
         self.transitions.push(StateMachineTransition::new(None, None, from_state.into(), get_to_state.into(), Some(Box::new(effect))));
         self
@@ -313,14 +313,14 @@ impl <'a, TEvent, TState: PartialEq<TState> + Debug + Clone + Send + Eq + Partia
     /// Adds an unnamed Transition to the State Machine definition with a predicate and a Side
     /// Effect. This transition will test the predicate for any event and execute the Side Effect
     /// then move to the To state if the Predicate returns true.
-    pub fn with_predicated_transition_effect(mut self, from_state: impl Into<FromState<TState>>, get_to_state: impl Into<ToState<TEvent, TState, TData>>, event_predicate: impl Fn(&StateTransitionEffectData<TEvent, TState, TData>) -> bool + Send + 'a, effect: impl Fn(StateTransitionEffectData<TEvent, TState, TData>) -> Result<(), Box<dyn std::error::Error + Send>> + Send + 'a) -> Self
+    pub fn with_predicated_transition_effect(mut self, from_state: impl Into<FromState<TState>>, get_to_state: impl Into<ToState<TEvent, TState, TData>>, event_predicate: impl Fn(&StateTransitionEffectData<TEvent, TState, TData>) -> bool + Send + 'a, effect: impl Fn(StateTransitionEffectData<TEvent, TState, TData>) -> Result<(), Box<dyn std::error::Error>> + Send + 'a) -> Self
     {
         self.transitions.push(StateMachineTransition::new(None, Some(Box::new(event_predicate)), from_state.into(), get_to_state.into(), Some(Box::new(effect))));
         self
     }
 }
 
-impl <'a, TEvent, TState: PartialEq<TState> + Debug + Clone + Send + Eq + PartialEq + 'a, TData> StateMachineFactory<'a, TEvent, TState, TData>
+impl <'a, TEvent, TState: PartialEq<TState> + Clone + Send + Eq + PartialEq + 'a, TData> StateMachineFactory<'a, TEvent, TState, TData>
 where TEvent: PartialEq<TEvent> + Sync
 {
     /// Adds a named Transition to the State Machine definition whose predicate checks for equality with a
@@ -343,7 +343,7 @@ where TEvent: PartialEq<TEvent> + Sync
     /// Adds a named Transition with a side effect to the State Machine definition whose predicate checks
     /// for equality with a provided Event reference. This is syntactic sugar for
     /// `.with_predicated_transition(..)` with an equality Predicate.
-    pub fn with_named_event_transition_effect(mut self, name: impl Into<String>, event: &'a TEvent, from_state: impl Into<FromState<TState>>, get_to_state: impl Into<ToState<TEvent, TState, TData>>, effect: impl Fn(StateTransitionEffectData<TEvent, TState, TData>) -> Result<(), Box<dyn std::error::Error + Send>> + Send + 'a) -> Self
+    pub fn with_named_event_transition_effect(mut self, name: impl Into<String>, event: &'a TEvent, from_state: impl Into<FromState<TState>>, get_to_state: impl Into<ToState<TEvent, TState, TData>>, effect: impl Fn(StateTransitionEffectData<TEvent, TState, TData>) -> Result<(), Box<dyn std::error::Error>> + Send + 'a) -> Self
     {
         self.transitions.push(
             StateMachineTransition::new(
@@ -376,7 +376,7 @@ where TEvent: PartialEq<TEvent> + Sync
     /// Adds an unnamed Transition with a side effect to the State Machine definition whose
     /// predicate checks for equality with a provided Event reference. This is syntactic sugar for
     /// `.with_predicated_transition(..)` with an equality Predicate.
-    pub fn with_event_transition_effect(mut self, event: &'a TEvent, from_state: impl Into<FromState<TState>>, get_to_state: impl Into<ToState<TEvent, TState, TData>>, effect: impl Fn(StateTransitionEffectData<TEvent, TState, TData>) -> Result<(), Box<dyn std::error::Error + Send>> + Send + 'a) -> Self
+    pub fn with_event_transition_effect(mut self, event: &'a TEvent, from_state: impl Into<FromState<TState>>, get_to_state: impl Into<ToState<TEvent, TState, TData>>, effect: impl Fn(StateTransitionEffectData<TEvent, TState, TData>) -> Result<(), Box<dyn std::error::Error>> + Send + 'a) -> Self
     {
         self.transitions.push(
             StateMachineTransition::new(
@@ -393,10 +393,10 @@ where TEvent: PartialEq<TEvent> + Sync
 
 /// Basic error type for [StateMachine]
 #[derive(Error, Debug)]
-pub enum StateMachineError<TState: Debug + Send + Clone + Eq + PartialEq> {
+pub enum StateMachineError<TState: Send + Clone + Eq + PartialEq> {
     /// Basic error type for [StateMachine::handle_event]
     #[error("error running effect moving from state {0:?} to {1:?}: {2:?}")]
-    EffectError(TState, TState, Box<dyn std::error::Error + Send>)
+    EffectError(TState, TState, Box<dyn std::error::Error>)
 }
 
 /// Describes a Transition between States, potentially with a Predicate and/or Effect
@@ -406,7 +406,7 @@ pub struct StateMachineTransition<'a, TEvent, TState: PartialEq<TState> + Clone 
     from_state: FromState<TState>,
     get_to_state: ToState<TEvent, TState, TData>,
     event_predicate: Option<Box<dyn Fn(&StateTransitionEffectData<TEvent, TState, TData>) -> bool + Send + 'a>>,
-    effect: Option<Box<dyn Fn(StateTransitionEffectData<TEvent, TState, TData>) -> Result<(), Box<dyn std::error::Error + Send>> + Send + 'a>>
+    effect: Option<Box<dyn Fn(StateTransitionEffectData<TEvent, TState, TData>) -> Result<(), Box<dyn std::error::Error>> + Send + 'a>>
 }
 
 impl <'a, TEvent, TState: PartialEq<TState> + Clone + Send + 'a, TData> StateMachineTransition<'a, TEvent, TState, TData> {
@@ -415,7 +415,7 @@ impl <'a, TEvent, TState: PartialEq<TState> + Clone + Send + 'a, TData> StateMac
         event_predicate: Option<Box<dyn Fn(&StateTransitionEffectData<TEvent, TState, TData>) -> bool + Send + 'a>>,
         from_state: FromState<TState>,
         get_to_state: ToState<TEvent, TState, TData>,
-        effect: Option<Box<dyn Fn(StateTransitionEffectData<TEvent, TState, TData>) -> Result<(), Box<dyn std::error::Error + Send>> + Send + 'a>>,
+        effect: Option<Box<dyn Fn(StateTransitionEffectData<TEvent, TState, TData>) -> Result<(), Box<dyn std::error::Error>> + Send + 'a>>,
     ) -> Self
     {
         Self {
