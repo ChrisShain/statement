@@ -1,10 +1,9 @@
 #[cfg(test)]
 mod calculator_tests {
     use std::sync::atomic::Ordering::SeqCst;
-    use anyhow::anyhow;
     use atomic_float::AtomicF64;
     use statement::FromState::{Any, AnyOf};
-    use statement::{StateMachineFactory, StateTransitionEffectData};
+    use statement::{StateMachineError, StateMachineFactory, StateTransitionEffectData};
     use statement::ToState::Same;
 
     struct CalcData {
@@ -12,20 +11,19 @@ mod calculator_tests {
         pub stored_value: AtomicF64,
     }
 
-    #[test]
-    fn calculator_test() -> anyhow::Result<()> {
-        #[derive(Copy, Clone, Eq, PartialEq, Debug)]
-        enum States {
-            Idle,
-            Adding,
-            Subtracting,
-            Multiplying,
-            Dividing
-        }
+    #[derive(Copy, Clone, Eq, PartialEq, Debug)]
+    enum States {
+        Idle,
+        Adding,
+        Subtracting,
+        Multiplying,
+        Dividing
+    }
 
+    #[test]
+    fn calculator_test() -> Result<(), StateMachineError<States>> {
         #[derive(Copy, Clone, Eq, PartialEq, Debug)]
         enum Events {
-            Clear,
             Digit { digit: u8 },
             Add,
             Subtract,
@@ -106,19 +104,18 @@ mod calculator_tests {
                 })
             .lock().build(States::Idle, &mut init_data);
 
-        let error_mapper = |_| { anyhow!("error transitioning") };
-        sm.handle_event(Events::Digit {digit: 2}).map_err(error_mapper)?;
-        sm.handle_event(Events::Add).map_err(error_mapper)?;
-        sm.handle_event(Events::Digit {digit: 0}).map_err(error_mapper)?;
-        sm.handle_event(Events::Subtract).map_err(error_mapper)?;
-        sm.handle_event(Events::Digit {digit: 1}).map_err(error_mapper)?;
-        sm.handle_event(Events::Multiply).map_err(error_mapper)?;
-        sm.handle_event(Events::Digit {digit: 1}).map_err(error_mapper)?;
-        sm.handle_event(Events::Digit {digit: 2}).map_err(error_mapper)?;
-        sm.handle_event(Events::Digit {digit: 6}).map_err(error_mapper)?;
-        sm.handle_event(Events::Divide).map_err(error_mapper)?;
-        sm.handle_event(Events::Digit {digit: 3}).map_err(error_mapper)?;
-        sm.handle_event(Events::Equals).map_err(error_mapper)?;
+        sm.handle_event(Events::Digit {digit: 2})?;
+        sm.handle_event(Events::Add)?;
+        sm.handle_event(Events::Digit {digit: 0})?;
+        sm.handle_event(Events::Subtract)?;
+        sm.handle_event(Events::Digit {digit: 1})?;
+        sm.handle_event(Events::Multiply)?;
+        sm.handle_event(Events::Digit {digit: 1})?;
+        sm.handle_event(Events::Digit {digit: 2})?;
+        sm.handle_event(Events::Digit {digit: 6})?;
+        sm.handle_event(Events::Divide)?;
+        sm.handle_event(Events::Digit {digit: 3})?;
+        sm.handle_event(Events::Equals)?;
 
         assert_eq!(42f64, sm.data.input_value.load(SeqCst));
 
